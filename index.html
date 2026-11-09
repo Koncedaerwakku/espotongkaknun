@@ -4,14 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kak Nun - Kartu Stempel Es Potong</title>
-    <!-- Tailwind CSS & Font -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
-    <!-- QR Library & Confetti -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-    <!-- Firebase SDK (Compat Version) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <style>
@@ -25,74 +21,34 @@
 </head>
 <body class="bg-red-50 min-h-screen text-slate-800 flex flex-col justify-between">
 
-    <!-- Header Kak Nun -->
     <header class="bg-red-700 text-white p-4 shadow-md text-center border-b-4 border-yellow-400">
-        <h1 class="text-xl font-extrabold tracking-wider">KAK NUN</h1>
+        <h1 class="text-xl font-extrabold tracking-wider">🍦 KAK NUN</h1>
         <p class="text-xs text-yellow-200">Es Potong Singapore - Loyalty Card</p>
     </header>
 
     <main class="max-w-md mx-auto p-4 w-full flex-grow">
-
-        <!-- Tombol Switch Kasir / Pelanggan -->
-        <div class="flex bg-red-200/60 p-1 rounded-xl mb-4 text-xs font-bold">
-            <button onclick="showView('customer')" id="tabCust" class="flex-1 py-2 rounded-lg bg-white text-red-800 shadow">HP Pelanggan</button>
-            <button onclick="showView('cashier')" id="tabCash" class="flex-1 py-2 rounded-lg text-red-900/60">Mode Kasir</button>
-        </div>
-
-        <!-- ================= Halaman Pelanggan ================= -->
-        <div id="customerView" class="space-y-4">
-            <div class="bg-white p-5 rounded-3xl shadow-xl border border-red-100 text-center space-y-4">
-                <div class="flex justify-between items-center border-b pb-3">
-                    <div class="text-left">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase">ID Pelanggan</span>
-                        <h3 id="custIdDisplay" class="text-sm font-mono font-bold text-red-700">MEMUAT...</h3>
-                    </div>
-                    <span id="stampBadge" class="bg-yellow-400 text-red-900 text-xs font-extrabold px-3 py-1 rounded-full">0 / 10 Stempel</span>
+        <div class="bg-white p-5 rounded-3xl shadow-xl border border-red-100 text-center space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <div class="text-left">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase">ID Pelanggan</span>
+                    <h3 id="custIdDisplay" class="text-sm font-mono font-bold text-red-700">MEMUAT...</h3>
                 </div>
-
-                <!-- Grid Stempel Es Potong (10 Kotak) -->
-                <div id="stampGrid" class="grid grid-cols-5 gap-2 py-2"></div>
-
-                <!-- QR Code Unik Pelanggan -->
-                <div class="bg-red-50 p-4 rounded-2xl border border-dashed border-red-300">
-                    <p class="text-xs font-bold text-red-800 mb-2">Scan QR ini di Kasir untuk Tambah Stempel</p>
-                    <div id="qrcode" class="flex justify-center bg-white p-2 rounded-xl inline-block shadow-sm"></div>
-                </div>
-
-                <!-- Banner Reward -->
-                <div id="rewardBanner" class="hidden bg-gradient-to-r from-yellow-400 to-amber-500 text-red-950 p-3 rounded-2xl font-extrabold text-xs shadow-lg animate-bounce">
-                    🎉 GRATIS 1 ES POTONG SINGAPORE!<br>
-                    <span class="font-normal text-[11px]">Tunjukkan ke Kasir Kak Nun untuk klaim!</span>
-                </div>
+                <span id="stampBadge" class="bg-yellow-400 text-red-900 text-xs font-extrabold px-3 py-1 rounded-full">0 / 10 Stempel</span>
             </div>
-            <p class="text-center text-[11px] text-slate-400">Beli 10 Es Potong, Gratis 1 Pilihan Rasa Bebas!</p>
-        </div>
 
-        <!-- ================= Halaman Kasir ================= -->
-        <div id="cashierView" class="hidden space-y-4">
-            <div class="bg-white p-5 rounded-3xl shadow-xl border border-red-100 space-y-4">
-                <h2 class="text-sm font-extrabold text-red-800 border-b pb-2">Panel Kasir Kak Nun</h2>
+            <div id="stampGrid" class="grid grid-cols-5 gap-2 py-2"></div>
 
-                <div class="space-y-2">
-                    <p class="text-xs font-bold text-slate-600">Scan QR HP Pelanggan:</p>
-                    <div id="reader" class="w-full overflow-hidden rounded-2xl border border-slate-200"></div>
-                </div>
+            <div class="bg-red-50 p-4 rounded-2xl border border-dashed border-red-300">
+                <p class="text-xs font-bold text-red-800 mb-2">Scan QR ini di Kasir untuk Tambah Stempel</p>
+                <div id="qrcode" class="flex justify-center bg-white p-2 rounded-xl inline-block shadow-sm"></div>
+            </div>
 
-                <div class="relative flex py-1 items-center">
-                    <div class="flex-grow border-t border-slate-200"></div>
-                    <span class="flex-shrink mx-3 text-slate-400 text-[10px]">ATAU INPUT MANUAL ID</span>
-                    <div class="flex-grow border-t border-slate-200"></div>
-                </div>
-
-                <div class="flex gap-2">
-                    <input type="text" id="manualId" placeholder="Contoh: KN-123456" class="flex-grow text-xs border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:border-red-600">
-                    <button onclick="addManualStamp()" class="bg-red-700 hover:bg-red-800 text-white text-xs font-bold px-4 py-2 rounded-xl">Tambah</button>
-                </div>
-
-                <div id="scanStatus" class="hidden p-3 rounded-xl text-xs font-bold text-center"></div>
+            <div id="rewardBanner" class="hidden bg-gradient-to-r from-yellow-400 to-amber-500 text-red-950 p-3 rounded-2xl font-extrabold text-xs shadow-lg animate-bounce">
+                🎉 GRATIS 1 ES POTONG SINGAPORE!<br>
+                <span class="font-normal text-[11px]">Tunjukkan ke Kasir Kak Nun untuk klaim!</span>
             </div>
         </div>
-
+        <p class="text-center text-[11px] text-slate-400 mt-4">Beli 10 Es Potong, Gratis 1 Pilihan Rasa Bebas!</p>
     </main>
 
     <footer class="text-center py-4 text-[10px] text-slate-400">
@@ -100,7 +56,6 @@
     </footer>
 
     <script>
-        // Konfigurasi Firebase Asli
         const firebaseConfig = {
             apiKey: "AIzaSyBfcz3Ip67jzue1N4w6At0PeEWUzCx034A",
             authDomain: "esptgkaknun.firebaseapp.com",
@@ -116,9 +71,7 @@
         const db = firebase.firestore();
 
         let custId = localStorage.getItem('kaknun_customer_id');
-        let html5QrCode = null;
 
-        // Auto Register Pelanggan Baru ke Cloud Firestore saat pertama buka link
         window.onload = async function() {
             if (!custId) {
                 custId = 'KN-' + Math.floor(100000 + Math.random() * 900000);
@@ -127,28 +80,24 @@
                 try {
                     await db.collection('customers').doc(custId).set({
                         id: custId,
-                        stamps: 1, // Bonus 1 stempel pertama otomatis saat tap NFC/scan
+                        stamps: 1,
                         created_at: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 } catch (e) {
-                    console.log("Gagal buat akun ke database:", e);
+                    console.log("Gagal buat akun:", e);
                 }
             }
 
-            // Dengerin perubahan data secara real-time dari database
             db.collection('customers').doc(custId).onSnapshot((doc) => {
                 if (doc.exists) {
                     renderCard(doc.data());
                 } else {
-                    // Kalau database ke-reset, buat ulang otomatis
                     db.collection('customers').doc(custId).set({
                         id: custId,
                         stamps: 1,
                         created_at: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 }
-            }, (error) => {
-                console.log("Error snapshot:", error);
             });
         };
 
@@ -156,7 +105,6 @@
             document.getElementById('custIdDisplay').innerText = data.id;
             document.getElementById('stampBadge').innerText = `${data.stamps} / 10 Stempel`;
 
-            // Render Kotak Stempel (10 Slot)
             const grid = document.getElementById('stampGrid');
             grid.innerHTML = '';
             for (let i = 1; i <= 10; i++) {
@@ -171,7 +119,6 @@
                 grid.appendChild(div);
             }
 
-            // QR Code Unik Pelanggan
             document.getElementById('qrcode').innerHTML = "";
             new QRCode(document.getElementById("qrcode"), {
                 text: data.id,
@@ -179,97 +126,12 @@
                 height: 130
             });
 
-            // Banner Hadiah
             let rewardBanner = document.getElementById('rewardBanner');
             if (data.stamps >= 10) {
                 rewardBanner.classList.remove('hidden');
                 confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
             } else {
                 rewardBanner.classList.add('hidden');
-            }
-        }
-
-        // Ganti Tampilan Antara Pelanggan & Kasir
-        function showView(view) {
-            let cust = document.getElementById('customerView');
-            let cash = document.getElementById('cashierView');
-            let tabCust = document.getElementById('tabCust');
-            let tabCash = document.getElementById('tabCash');
-
-            if (view === 'customer') {
-                cust.classList.remove('hidden');
-                cash.classList.add('hidden');
-                tabCust.className = "flex-1 py-2 rounded-lg bg-white text-red-800 shadow";
-                tabCash.className = "flex-1 py-2 rounded-lg text-red-900/60";
-                if(html5QrCode) {
-                    html5QrCode.stop().catch(() => {});
-                }
-            } else {
-                cash.classList.remove('hidden');
-                cust.classList.add('hidden');
-                tabCash.className = "flex-1 py-2 rounded-lg bg-white text-red-800 shadow";
-                tabCust.className = "flex-1 py-2 rounded-lg text-red-900/60";
-                startScanner();
-            }
-        }
-
-        // Kamera Scanner Kasir
-        function startScanner() {
-            if (!html5QrCode) {
-                html5QrCode = new Html5Qrcode("reader");
-            }
-            html5QrCode.start(
-                { facingMode: "environment" },
-                { fps: 10, qrbox: { width: 180, height: 180 } },
-                (scannedId) => {
-                    processStamp(scannedId.trim());
-                },
-                (err) => {}
-            ).catch(err => console.log(err));
-        }
-
-        function addManualStamp() {
-            let val = document.getElementById('manualId').value.trim();
-            if(val) {
-                processStamp(val);
-                document.getElementById('manualId').value = '';
-            }
-        }
-
-        // Proses Tambah Stempel ke Database Cloud
-        async function processStamp(targetId) {
-            let statusBox = document.getElementById('scanStatus');
-            statusBox.classList.remove('hidden');
-            statusBox.className = "bg-blue-100 text-blue-800 p-3 rounded-xl text-xs font-bold text-center";
-            statusBox.innerText = `⏳ Memproses stempel untuk ${targetId}...`;
-
-            try {
-                let userRef = db.collection('customers').doc(targetId);
-                let doc = await userRef.get();
-
-                if (doc.exists) {
-                    let currentStamps = doc.data().stamps;
-                    if (currentStamps < 10) {
-                        await userRef.update({ stamps: currentStamps + 1 });
-                        statusBox.className = "bg-emerald-100 text-emerald-800 p-3 rounded-xl text-xs font-bold text-center";
-                        statusBox.innerText = `✅ Berhasil! Stempel ${targetId} bertambah jadi ${currentStamps + 1}/10`;
-                    } else {
-                        statusBox.className = "bg-amber-100 text-amber-800 p-3 rounded-xl text-xs font-bold text-center";
-                        statusBox.innerText = `⚠️ Kartu ${targetId} sudah PENUH (10/10)! Siap ditukar es gratis.`;
-                    }
-                } else {
-                    // Kalau ID belum ada di database, daftarkan otomatis dengan 1 stempel
-                    await userRef.set({
-                        id: targetId,
-                        stamps: 1,
-                        created_at: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    statusBox.className = "bg-emerald-100 text-emerald-800 p-3 rounded-xl text-xs font-bold text-center";
-                    statusBox.innerText = `✅ Pelanggan baru ${targetId} terdaftar! Stempel 1/10`;
-                }
-            } catch (e) {
-                statusBox.className = "bg-red-100 text-red-800 p-3 rounded-xl text-xs font-bold text-center";
-                statusBox.innerText = `❌ Gagal terhubung ke database. Coba lagi!`;
             }
         }
     </script>
