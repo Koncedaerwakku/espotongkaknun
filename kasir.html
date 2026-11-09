@@ -63,6 +63,7 @@
         const db = firebase.firestore();
 
         let html5QrCode = null;
+        let isProcessing = false;
 
         window.onload = function() {
             startScanner();
@@ -76,6 +77,8 @@
                 { facingMode: "environment" },
                 { fps: 10, qrbox: { width: 180, height: 180 } },
                 (scannedText) => {
+                    if (isProcessing) return;
+                    
                     let cleanId = scannedText.trim();
                     if (cleanId.includes('KN-')) {
                         let match = cleanId.match(/KN-\d+/);
@@ -88,6 +91,7 @@
         }
 
         function addManualStamp() {
+            if (isProcessing) return;
             let val = document.getElementById('manualId').value.trim();
             if(val) {
                 processStamp(val);
@@ -96,39 +100,7 @@
         }
 
         async function processStamp(targetId) {
+            isProcessing = true;
             let statusBox = document.getElementById('scanStatus');
             statusBox.classList.remove('hidden');
-            statusBox.className = "bg-blue-100 text-blue-800 p-3 rounded-xl text-xs font-bold text-center";
-            statusBox.innerText = `⏳ Memproses stempel untuk ${targetId}...`;
-
-            try {
-                let userRef = db.collection('customers').doc(targetId);
-                let doc = await userRef.get();
-
-                if (doc.exists) {
-                    let currentStamps = doc.data().stamps;
-                    if (currentStamps < 10) {
-                        await userRef.update({ stamps: currentStamps + 1 });
-                        statusBox.className = "bg-emerald-100 text-emerald-800 p-3 rounded-xl text-xs font-bold text-center";
-                        statusBox.innerText = `✅ Berhasil! Stempel ${targetId} bertambah jadi ${currentStamps + 1}/10`;
-                    } else {
-                        statusBox.className = "bg-amber-100 text-amber-800 p-3 rounded-xl text-xs font-bold text-center";
-                        statusBox.innerText = `⚠️ Kartu ${targetId} sudah PENUH (10/10)! Siap ditukar es gratis.`;
-                    }
-                } else {
-                    await userRef.set({
-                        id: targetId,
-                        stamps: 1,
-                        created_at: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    statusBox.className = "bg-emerald-100 text-emerald-800 p-3 rounded-xl text-xs font-bold text-center";
-                    statusBox.innerText = `✅ Pelanggan baru ${targetId} terdaftar! Stempel 1/10`;
-                }
-            } catch (e) {
-                statusBox.className = "bg-red-100 text-red-800 p-3 rounded-xl text-xs font-bold text-center";
-                statusBox.innerText = `❌ Gagal terhubung ke database. Coba lagi!`;
-            }
-        }
-    </script>
-</body>
-</html>
+            statusBox.className = "bg-blue-10
