@@ -22,7 +22,7 @@
 
     <main class="max-w-md mx-auto p-4 w-full flex-grow space-y-4">
         <div class="bg-white p-5 rounded-3xl shadow-xl border border-red-100 space-y-4">
-            <h2 class="text-sm font-extrabold text-red-800 border-b pb-2">Scan QR HP Pelanggan</h2>
+            <h2 class="text-sm font-extrabold text-red-800 border-b pb-2">Scan QR Nama Pelanggan</h2>
 
             <div class="space-y-2">
                 <div id="reader" class="w-full overflow-hidden rounded-2xl border border-slate-200"></div>
@@ -30,12 +30,12 @@
 
             <div class="relative flex py-1 items-center">
                 <div class="flex-grow border-t border-slate-200"></div>
-                <span class="flex-shrink mx-3 text-slate-400 text-[10px]">ATAU INPUT MANUAL ID</span>
+                <span class="flex-shrink mx-3 text-slate-400 text-[10px]">ATAU KETIK NAMA MANUAL</span>
                 <div class="flex-grow border-t border-slate-200"></div>
             </div>
 
             <div class="flex gap-2">
-                <input type="text" id="manualId" placeholder="Contoh: KN-123456" class="flex-grow text-xs border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:border-red-600">
+                <input type="text" id="manualId" placeholder="Contoh: Budi" class="flex-grow text-xs border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:border-red-600">
                 <button onclick="addManualStamp()" class="bg-red-700 hover:bg-red-800 text-white text-xs font-bold px-4 py-2 rounded-xl">Tambah</button>
             </div>
 
@@ -45,7 +45,7 @@
         <!-- Panel khusus klaim/reset jika kartu penuh -->
         <div id="rewardPanel" class="hidden bg-amber-50 border-2 border-amber-400 p-5 rounded-3xl shadow-lg space-y-3 text-center">
             <span class="bg-amber-400 text-amber-950 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">Status: Kartu Penuh (10/10)</span>
-            <h3 id="targetIdText" class="text-sm font-mono font-bold text-slate-700">ID: -</h3>
+            <h3 id="targetIdText" class="text-sm font-bold text-slate-700">Pelanggan: -</h3>
             <p class="text-xs text-amber-900">Pelanggan berhak mendapat <span class="font-bold">1 Es Potong Gratis</span>!</p>
             <button onclick="resetCard()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-3 rounded-xl shadow-md transition">
                 🎉 Klaim Hadiah & Reset Kartu ke 0
@@ -74,7 +74,7 @@
 
         let html5QrCode = null;
         let isProcessing = false;
-        let activeCustomerId = null; // Menyimpan ID pelanggan yang sedang di-scan untuk reset
+        let activeCustomerName = null;
 
         window.onload = function() {
             startScanner();
@@ -89,13 +89,10 @@
                 { fps: 10, qrbox: { width: 180, height: 180 } },
                 (scannedText) => {
                     if (isProcessing) return;
-                    
-                    let cleanId = scannedText.trim();
-                    if (cleanId.includes('KN-')) {
-                        let match = cleanId.match(/KN-\d+/);
-                        if (match) cleanId = match[0];
+                    let cleanName = scannedText.trim();
+                    if (cleanName) {
+                        processStamp(cleanName);
                     }
-                    processStamp(cleanId);
                 },
                 (err) => {}
             ).catch(err => console.log(err));
@@ -110,19 +107,19 @@
             }
         }
 
-        async function processStamp(targetId) {
+        async function processStamp(targetName) {
             isProcessing = true;
-            activeCustomerId = targetId;
+            activeCustomerName = targetName;
             let statusBox = document.getElementById('scanStatus');
             let rewardPanel = document.getElementById('rewardPanel');
             
-            rewardPanel.classList.add('hidden'); // Sembunyikan panel reward dulu
+            rewardPanel.classList.add('hidden');
             statusBox.classList.remove('hidden');
             statusBox.className = "bg-blue-100 text-blue-800 p-3 rounded-xl text-xs font-bold text-center";
-            statusBox.innerText = `⏳ Memproses stempel untuk ${targetId}...`;
+            statusBox.innerText = `⏳ Memproses stempel untuk ${targetName}...`;
 
             try {
-                let userRef = db.collection('customers').doc(targetId);
+                let userRef = db.collection('customers').doc(targetName);
                 let doc = await userRef.get();
 
                 if (doc.exists) {
@@ -130,21 +127,20 @@
                     if (currentStamps < 10) {
                         await userRef.update({ stamps: currentStamps + 1 });
                         statusBox.className = "bg-emerald-100 text-emerald-800 p-3 rounded-xl text-xs font-bold text-center";
-                        statusBox.innerText = `✅ Berhasil! Stempel ${targetId} bertambah jadi ${currentStamps + 1}/10`;
+                        statusBox.innerText = `✅ Berhasil! Stempel ${targetName} bertambah jadi ${currentStamps + 1}/10`;
                     } else {
-                        // Jika sudah 10, tampilkan tombol klaim/reset
                         statusBox.classList.add('hidden');
-                        document.getElementById('targetIdText').innerText = `ID Pelanggan: ${targetId}`;
+                        document.getElementById('targetIdText').innerText = `Pelanggan: ${targetName}`;
                         rewardPanel.classList.remove('hidden');
                     }
                 } else {
                     await userRef.set({
-                        id: targetId,
+                        id: targetName,
                         stamps: 1,
                         created_at: firebase.firestore.FieldValue.serverTimestamp()
                     });
                     statusBox.className = "bg-emerald-100 text-emerald-800 p-3 rounded-xl text-xs font-bold text-center";
-                    statusBox.innerText = `✅ Pelanggan baru ${targetId} terdaftar! Stempel 1/10`;
+                    statusBox.innerText = `✅ Pelanggan baru "${targetName}" terdaftar! Stempel 1/10`;
                 }
             } catch (e) {
                 statusBox.className = "bg-red-100 text-red-800 p-3 rounded-xl text-xs font-bold text-center";
@@ -158,22 +154,21 @@
         }
 
         async function resetCard() {
-            if (!activeCustomerId) return;
+            if (!activeCustomerName) return;
             
             let rewardPanel = document.getElementById('rewardPanel');
             let statusBox = document.getElementById('scanStatus');
 
             try {
-                let userRef = db.collection('customers').doc(activeCustomerId);
-                // Reset stempel jadi 0 (atau bisa diisi 0 agar mulai dari awal)
+                let userRef = db.collection('customers').doc(activeCustomerName);
                 await userRef.update({ stamps: 0 });
 
                 rewardPanel.classList.add('hidden');
                 statusBox.classList.remove('hidden');
                 statusBox.className = "bg-emerald-100 text-emerald-800 p-3 rounded-xl text-xs font-bold text-center";
-                statusBox.innerText = `🎁 Hadiah berhasil diklaim! Kartu ${activeCustomerId} telah di-reset ke 0.`;
+                statusBox.innerText = `🎁 Hadiah diklaim! Kartu ${activeCustomerName} di-reset ke 0.`;
                 
-                activeCustomerId = null;
+                activeCustomerName = null;
             } catch (e) {
                 alert("Gagal mereset kartu. Coba lagi!");
             }
